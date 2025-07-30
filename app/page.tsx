@@ -1,31 +1,51 @@
+// app/page.tsx - Version API-only (sans interface)
 export default function Home() {
   return (
-    <main style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>🧺 Laundry Management Platform</h1>
-      <p>Welcome to the Laundry Management Platform API</p>
+    <main style={{ padding: '2rem', fontFamily: 'system-ui', textAlign: 'center' }}>
+      <h1>🚀 Laundry Management API</h1>
+      <p style={{ fontSize: '1.2rem', color: '#666' }}>
+        API Server Running Successfully
+      </p>
       
-      <div style={{ marginTop: '2rem' }}>
-        <h2>🔗 Available API Endpoints:</h2>
-        <ul>
-          <li><strong>Dashboard:</strong> <code>GET /api/admin/dashboard/overview</code></li>
-          <li><strong>Laundries:</strong> <code>GET /api/admin/laundries/performance</code></li>
-          <li><strong>Orders:</strong> <code>GET /api/admin/orders</code></li>
-          <li><strong>Authentication:</strong> <code>POST /api/auth/signup</code></li>
+      <div style={{ 
+        margin: '3rem auto', 
+        padding: '2rem', 
+        border: '2px dashed #007bff', 
+        borderRadius: '8px',
+        maxWidth: '600px',
+        backgroundColor: '#f8f9fa'
+      }}>
+        <h2>📡 Ready for API Testing</h2>
+        <p>Use tools like:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li>✅ Postman</li>
+          <li>✅ Thunder Client (VS Code)</li>
+          <li>✅ Insomnia</li>
+          <li>✅ curl commands</li>
         </ul>
       </div>
-      
+
       <div style={{ marginTop: '2rem' }}>
-        <h2>👤 Test Accounts:</h2>
-        <ul>
-          <li><strong>Super Admin:</strong> superadmin@laundry.com / superadmin123</li>
-          <li><strong>Laundry Admin:</strong> admin@quickwash.com / admin123</li>
-          <li><strong>Customer:</strong> customer1@example.com / customer123</li>
-        </ul>
+        <h3>🔗 Base URL:</h3>
+        <code style={{ 
+          backgroundColor: '#e9ecef', 
+          padding: '0.5rem 1rem', 
+          borderRadius: '4px',
+          fontSize: '1.1rem'
+        }}>
+          http://localhost:3000/api
+        </code>
       </div>
-      
+
       <div style={{ marginTop: '2rem' }}>
-        <h2>🚀 Next Steps:</h2>
-        <p>Use a REST client (Postman, Thunder Client) to test the APIs or build a frontend interface.</p>
+        <h3>🔐 Authentication:</h3>
+        <p>Get your token from: <code>/api/auth/signin</code></p>
+        <p>Use: <code>Authorization: Bearer [your-token]</code></p>
+      </div>
+
+      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666' }}>
+        <p>🎯 Interface supprimée - Mode API uniquement</p>
+        <p>Consultez la documentation des endpoints dans votre projet</p>
       </div>
     </main>
   )

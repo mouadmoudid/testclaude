@@ -1,8 +1,9 @@
+// app/layout.tsx - Version minimale pour API-only
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Laundry Management Platform',
-  description: 'Professional laundry service management system',
+  title: 'Laundry API Server',
+  description: 'API Server for Laundry Management Platform',
 }
 
 export default function RootLayout({
@@ -12,7 +13,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body style={{ 
+        margin: 0, 
+        padding: 0, 
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        backgroundColor: '#ffffff'
+      }}>
+        {children}
+      </body>
     </html>
   )
 }

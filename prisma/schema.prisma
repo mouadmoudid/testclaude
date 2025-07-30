@@ -1,0 +1,286 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  COMPLETED
+  CANCELED
+  REFUNDED
+}
+
+enum LaundryStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_APPROVAL
+}
+
+enum ActivityType {
+  ORDER_CREATED
+  ORDER_UPDATED
+  ORDER_COMPLETED
+  ORDER_CANCELED
+  LAUNDRY_CREATED
+  LAUNDRY_UPDATED
+  LAUNDRY_SUSPENDED
+  REVIEW_CREATED
+  USER_REGISTERED
+  PAYMENT_PROCESSED
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  addresses      Address[]
+  orders         Order[]
+  reviews        Review[]
+  ownedLaundries Laundry[] @relation("LaundryOwner")
+  activities     Activity[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  userId       String
+  street       String
+  city         String
+  state        String
+  zipCode      String
+  country      String  @default("Morocco")
+  isDefault    Boolean @default(false)
+  instructions String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+model Laundry {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  email       String        @unique
+  phone       String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  country     String        @default("Morocco")
+  latitude    Float?
+  longitude   Float?
+  status      LaundryStatus @default(PENDING_APPROVAL)
+  rating      Float         @default(0)
+  totalReviews Int          @default(0)
+  totalOrders Int           @default(0)
+  totalRevenue Float        @default(0)
+  ownerId     String
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Operating Hours (JSON format)
+  operatingHours Json?
+
+  // Relations
+  owner     User       @relation("LaundryOwner", fields: [ownerId], references: [id])
+  products  Product[]
+  orders    Order[]
+  reviews   Review[]
+  analytics Analytics[]
+  activities Activity[]
+
+  @@map("laundries")
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  laundryId   String
+  name        String
+  description String?
+  price       Float
+  category    String
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  laundry    Laundry     @relation(fields: [laundryId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String
+  laundryId       String
+  addressId       String
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  deliveryFee     Float       @default(0)
+  discount        Float       @default(0)
+  finalAmount     Float
+  paymentMethod   String?
+  paymentStatus   String      @default("PENDING")
+  notes           String?
+  pickupDate      DateTime?
+  deliveryDate    DateTime?
+  estimatedDelivery DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  customer   User        @relation(fields: [customerId], references: [id])
+  laundry    Laundry     @relation(fields: [laundryId], references: [id])
+  address    Address     @relation(fields: [addressId], references: [id])
+  orderItems OrderItem[]
+  activities Activity[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  total     Float
+  notes     String?
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String?
+  customerId String
+  laundryId String
+  rating    Int      @db.SmallInt
+  comment   String?
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  customer User    @relation(fields: [customerId], references: [id])
+  laundry  Laundry @relation(fields: [laundryId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  userId      String?
+  laundryId   String?
+  orderId     String?
+  type        ActivityType
+  title       String
+  description String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  user    User?    @relation(fields: [userId], references: [id])
+  laundry Laundry? @relation(fields: [laundryId], references: [id])
+  order   Order?   @relation(fields: [orderId], references: [id])
+
+  @@map("activities")
+}
+
+model Analytics {
+  id            String   @id @default(cuid())
+  laundryId     String
+  date          DateTime @db.Date
+  ordersCount   Int      @default(0)
+  revenue       Float    @default(0)
+  customersCount Int     @default(0)
+  avgRating     Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  laundry Laundry @relation(fields: [laundryId], references: [id], onDelete: Cascade)
+
+  @@unique([laundryId, date])
+  @@map("analytics")
+}
